@@ -70,11 +70,16 @@ class ExerciseSubmissionController extends Controller
         $submission->setAttribute('display_name', $readableName);
 
         $stats = CourseProgress::stats($user, $course);
+        $certificate = CourseProgress::maybeIssueCertificate($user, $course);
 
         return response()->json([
-            'message'    => 'Exercice soumis avec succès.',
-            'submission' => $submission,
-            'stats'      => $stats,
+            'message'     => 'Exercice soumis avec succès.',
+            'submission'  => $submission,
+            'stats'       => $stats,
+            'certificate' => $certificate ? [
+                'verification_code' => $certificate->verification_code,
+                'type'              => $certificate->type,
+            ] : null,
         ], 201);
     }
 

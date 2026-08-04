@@ -73,6 +73,7 @@ class Notify
             'exercise_corrected', 'exercise_due' => "Exercice — {$brand}",
             'enrollment', 'new_enrollment' => "Inscription — {$brand}",
             'certificate' => "Certificat — {$brand}",
+            'weekly_report' => "Rapport hebdomadaire — {$brand}",
             default => "Notification — {$brand}",
         };
     }

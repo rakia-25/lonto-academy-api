@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Payment;
+use App\Models\PlatformSetting;
 use App\Support\Notify;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,6 +73,13 @@ class EnrollmentController extends Controller
             'enrollment',
             'Vous êtes inscrit au cours « '.$course->title.' ». Commencez dès maintenant depuis votre espace.'
         );
+
+        if (PlatformSetting::get('newEnrollmentAlert', true)) {
+            Notify::toAdmins(
+                'new_enrollment',
+                "Nouvelle inscription : {$user->name} ({$user->email}) → « {$course->title} »."
+            );
+        }
 
         return response()->json([
             'message'    => $isFree ? 'Inscription réussie.' : 'Paiement confirmé. Accès au cours débloqué.',

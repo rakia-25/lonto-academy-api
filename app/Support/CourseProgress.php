@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\Exam;
 use App\Models\ExerciseSubmission;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
@@ -139,6 +140,10 @@ class CourseProgress
         ];
     }
 
+    /**
+     * Émet un certificat / attestation dès que le parcours cours est complet
+     * (leçons + QCM + exercices soumis). Idempotent.
+     */
     public static function maybeIssueCertificate(User $user, Course $course): ?Certificate
     {
         $stats = self::stats($user, $course);
@@ -155,10 +160,25 @@ class CourseProgress
             return $existing;
         }
 
-        return Certificate::create([
-            'user_id'   => $user->id,
-            'course_id' => $course->id,
-            'issued_at' => now(),
+        $exam = Exam::where('course_id', $course->id)->first();
+        $certType = ($exam?->certificate_type === 'attestation') ? 'attestation' : 'certificat';
+        $design = CertificateDesign::forExam($exam);
+
+        $certificate = Certificate::create([
+            'user_id'         => $user->id,
+            'course_id'       => $course->id,
+            'type'            => $certType,
+            'design_snapshot' => $design,
+            'issued_at'       => now(),
         ]);
+
+        $label = $certType === 'attestation' ? 'Votre attestation' : 'Votre certificat';
+        Notify::send(
+            $user,
+            'certificate',
+            "{$label} pour le cours « {$course->title} » est disponible. Téléchargez-le depuis votre tableau de bord."
+        );
+
+        return $certificate;
     }
 }

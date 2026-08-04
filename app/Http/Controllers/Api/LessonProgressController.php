@@ -67,6 +67,7 @@ class LessonProgressController extends Controller
         $progress->save();
 
         $stats = CourseProgress::stats($user, $course);
+        $certificate = CourseProgress::maybeIssueCertificate($user, $course);
 
         if ($request->exists('completed') && $request->boolean('completed')) {
             $chapter = $lesson->chapter;
@@ -98,8 +99,13 @@ class LessonProgressController extends Controller
         }
 
         return response()->json([
-            'progress' => $progress->fresh(),
-            'stats'    => $stats,
+            'progress'    => $progress->fresh(),
+            'stats'       => $stats,
+            'certificate' => $certificate ? [
+                'verification_code' => $certificate->verification_code,
+                'type'              => $certificate->type,
+                'issued_at'         => $certificate->issued_at,
+            ] : null,
         ]);
     }
 

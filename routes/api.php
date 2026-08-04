@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\CourseReviewController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExerciseSubmissionController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Api\PlatformSettingController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',              [AuthController::class, 'me']);
     Route::put('/me',              [AuthController::class, 'updateProfile']);
+    Route::post('/me/avatar',      [AuthController::class, 'uploadAvatar']);
+    Route::delete('/me/avatar',    [AuthController::class, 'deleteAvatar']);
     Route::put('/me/password',     [AuthController::class, 'updatePassword']);
     Route::post('/logout',         [AuthController::class, 'logout']);
     Route::get('/my-learning',     [CourseController::class, 'myLearning']);
@@ -29,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Inscription / achat
     Route::post('/courses/{slug}/checkout', [EnrollmentController::class, 'checkout']);
+    Route::post('/courses/{slug}/reviews', [CourseReviewController::class, 'store']);
 
     // Progression des leçons
     Route::put('/lessons/{lesson}/progress',      [LessonProgressController::class, 'update']);
@@ -139,6 +143,7 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 Route::get('/settings',         [PlatformSettingController::class, 'show']);
 Route::get('/courses',          [CourseController::class, 'index']);
 Route::get('/courses/{slug}',   [CourseController::class, 'show']);
+Route::get('/courses/{slug}/reviews', [CourseReviewController::class, 'index']);
 Route::get('/certificates/{code}/verify', [CertificateController::class, 'verify']);
 Route::get('/lesson-resources/{resource}/download', [AdminCourseController::class, 'downloadLessonResource']);
 Route::get('/exercises/{exercise}/download', [AdminCourseController::class, 'downloadExerciseFile']);

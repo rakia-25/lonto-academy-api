@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\ExerciseSubmission;
+use App\Support\CourseProgress;
 use App\Support\Notify;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -123,6 +124,10 @@ class ExerciseSubmissionController extends Controller
                 'exercise_corrected',
                 "Votre exercice « {$exerciseTitle} » ({$courseTitle}) a été {$label}{$scorePart}."
             );
+        }
+
+        if ($newStatus === 'validated' && $submission->user && $submission->exercise?->chapter?->course) {
+            CourseProgress::maybeIssueCertificate($submission->user, $submission->exercise->chapter->course);
         }
 
         return response()->json([

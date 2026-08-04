@@ -12,16 +12,23 @@ class Course extends Model
     protected $fillable = [
         'title', 'slug', 'short_description', 'description', 'learning_objectives',
         'prerequisites', 'target_audience', 'category', 'level', 'price',
-        'thumbnail', 'is_published',
+        'thumbnail', 'avg_rating', 'reviews_count', 'is_published',
     ];
 
     protected $casts = [
         'is_published'        => 'boolean',
         'price'               => 'decimal:2',
+        'avg_rating'          => 'decimal:2',
+        'reviews_count'       => 'integer',
         'learning_objectives' => 'array',
         'prerequisites'       => 'array',
         'target_audience'     => 'array',
     ];
+
+    public function reviews()
+    {
+        return $this->hasMany(CourseReview::class);
+    }
 
     public function chapters()
     {

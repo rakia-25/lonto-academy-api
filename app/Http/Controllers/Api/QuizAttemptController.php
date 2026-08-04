@@ -84,16 +84,21 @@ class QuizAttemptController extends Controller
         ]);
 
         $stats = CourseProgress::stats($user, $course);
+        $certificate = $passed ? CourseProgress::maybeIssueCertificate($user, $course) : null;
 
         return response()->json([
-            'attempt'  => $attempt,
-            'practice' => false,
-            'score'    => $score,
-            'passed'   => $passed,
-            'correct'  => $correct,
-            'total'    => $total,
-            'results'  => $results,
-            'stats'    => $stats,
+            'attempt'     => $attempt,
+            'practice'    => false,
+            'score'       => $score,
+            'passed'      => $passed,
+            'correct'     => $correct,
+            'total'       => $total,
+            'results'     => $results,
+            'stats'       => $stats,
+            'certificate' => $certificate ? [
+                'verification_code' => $certificate->verification_code,
+                'type'              => $certificate->type,
+            ] : null,
         ], 201);
     }
 
