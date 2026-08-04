@@ -11,11 +11,10 @@ return new class extends Migration
     {
         Schema::table('exercises', function (Blueprint $table) {
             $table->longText('instructions')->nullable()->after('title');
+            $table->string('instructions_file')->nullable()->change();
         });
 
-        DB::statement('ALTER TABLE exercises MODIFY instructions_file VARCHAR(255) NULL');
-
-        // Anciennes consignes texte stockées dans instructions_file
+        // Anciennes consignes texte stockées dans instructions_file (MySQL legacy)
         $rows = DB::table('exercises')->select('id', 'instructions_file')->get();
         foreach ($rows as $row) {
             $value = $row->instructions_file;
@@ -47,8 +46,7 @@ return new class extends Migration
 
         Schema::table('exercises', function (Blueprint $table) {
             $table->dropColumn('instructions');
+            $table->string('instructions_file')->nullable(false)->change();
         });
-
-        DB::statement('ALTER TABLE exercises MODIFY instructions_file VARCHAR(255) NOT NULL');
     }
 };
