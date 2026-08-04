@@ -43,6 +43,7 @@ class PlatformSetting extends Model
                     'newEnrollmentAlert' => true,
                     'weeklyReport'       => false,
                     'siteLogo'           => null,
+                    'favicon'            => null,
                     'certificateLogo'    => null,
                     'showCertificateLogo'=> true,
                     'showCertificateQr'  => true,

@@ -110,6 +110,47 @@ class PlatformSettingController extends Controller
         ]);
     }
 
+    public function uploadFavicon(Request $request)
+    {
+        $request->validate([
+            'favicon' => 'required|file|mimes:png,jpg,jpeg,webp,gif,ico,svg|max:2048',
+        ]);
+
+        $row = PlatformSetting::current();
+        $data = $row->data ?? [];
+
+        if (! empty($data['favicon']) && Storage::disk('public')->exists($data['favicon'])) {
+            Storage::disk('public')->delete($data['favicon']);
+        }
+
+        $path = $request->file('favicon')->store('favicons', 'public');
+        $data['favicon'] = $path;
+        $row->update(['data' => $data]);
+
+        return response()->json([
+            'message'  => 'Icône du navigateur enregistrée.',
+            'settings' => $this->normalize($row->fresh()->data ?? []),
+        ]);
+    }
+
+    public function deleteFavicon()
+    {
+        $row = PlatformSetting::current();
+        $data = $row->data ?? [];
+
+        if (! empty($data['favicon']) && Storage::disk('public')->exists($data['favicon'])) {
+            Storage::disk('public')->delete($data['favicon']);
+        }
+
+        unset($data['favicon']);
+        $row->update(['data' => $data]);
+
+        return response()->json([
+            'message'  => 'Icône du navigateur supprimée.',
+            'settings' => $this->normalize($row->fresh()->data ?? []),
+        ]);
+    }
+
     public function uploadCertificateLogo(Request $request)
     {
         $request->validate([
@@ -176,6 +217,9 @@ class PlatformSettingController extends Controller
         }
         if (! array_key_exists('siteLogo', $data)) {
             $data['siteLogo'] = null;
+        }
+        if (! array_key_exists('favicon', $data)) {
+            $data['favicon'] = null;
         }
 
         return $data;

@@ -125,6 +125,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/settings', [PlatformSettingController::class, 'update']);
     Route::post('/settings/site-logo', [PlatformSettingController::class, 'uploadSiteLogo']);
     Route::delete('/settings/site-logo', [PlatformSettingController::class, 'deleteSiteLogo']);
+    Route::post('/settings/favicon', [PlatformSettingController::class, 'uploadFavicon']);
+    Route::delete('/settings/favicon', [PlatformSettingController::class, 'deleteFavicon']);
     Route::post('/settings/certificate-logo', [PlatformSettingController::class, 'uploadCertificateLogo']);
     Route::delete('/settings/certificate-logo', [PlatformSettingController::class, 'deleteCertificateLogo']);
 });
