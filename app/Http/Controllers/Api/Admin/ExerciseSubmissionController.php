@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\ExerciseSubmission;
 use App\Support\CourseProgress;
+use App\Support\Media;
 use App\Support\Notify;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -140,7 +141,7 @@ class ExerciseSubmissionController extends Controller
     {
         $this->assertFileExists($submission);
 
-        return Storage::disk('public')->download(
+        return Media::download(
             $submission->file_path,
             basename($submission->file_path)
         );
@@ -150,13 +151,13 @@ class ExerciseSubmissionController extends Controller
     {
         $this->assertFileExists($submission);
 
-        $absolute = Storage::disk('public')->path($submission->file_path);
         $mime = Storage::disk('public')->mimeType($submission->file_path) ?: 'application/octet-stream';
 
-        return response()->file($absolute, [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="'.basename($submission->file_path).'"',
-        ]);
+        return Media::inline(
+            $submission->file_path,
+            basename($submission->file_path),
+            $mime
+        );
     }
 
     private function assertFileExists(ExerciseSubmission $submission): void

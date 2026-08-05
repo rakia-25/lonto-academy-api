@@ -9,6 +9,7 @@ use App\Models\Exercise;
 use App\Models\Lesson;
 use App\Models\LessonResource;
 use App\Models\Quiz;
+use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -242,10 +243,7 @@ class CourseController extends Controller
     {
         abort_unless(Storage::disk('public')->exists($resource->file_path), 404);
 
-        return response()->download(
-            Storage::disk('public')->path($resource->file_path),
-            $resource->title
-        );
+        return Media::download($resource->file_path, $resource->title);
     }
 
     // Modifier un chapitre
@@ -366,8 +364,8 @@ class CourseController extends Controller
         abort_unless($exercise->instructions_file, 404);
         abort_unless(Storage::disk('public')->exists($exercise->instructions_file), 404);
 
-        return response()->download(
-            Storage::disk('public')->path($exercise->instructions_file),
+        return Media::download(
+            $exercise->instructions_file,
             basename($exercise->instructions_file)
         );
     }

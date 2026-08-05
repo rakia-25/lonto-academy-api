@@ -10,6 +10,7 @@ use App\Models\ExamAttempt;
 use App\Models\ExamQuestion;
 use App\Support\CertificateDesign;
 use App\Support\CertificatePdf;
+use App\Support\Media;
 use App\Support\Notify;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -378,10 +379,7 @@ class ExamController extends Controller
             abort(404, 'Fichier introuvable.');
         }
 
-        return response()->download(
-            Storage::disk('public')->path($path),
-            basename($path)
-        );
+        return Media::download($path, basename($path));
     }
 
     // Résultats des apprenants

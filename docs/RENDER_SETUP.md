@@ -40,6 +40,7 @@ php artisan key:generate --show
 | `CACHE_STORE` | `database` |
 | `QUEUE_CONNECTION` | `database` |
 | `FILESYSTEM_DISK` | `local` |
+| `AWS_*` | voir [R2_SETUP.md](./R2_SETUP.md) (recommandé en prod) |
 
 ## 5. Vérification
 - Health : `https://<service>.onrender.com/up`
@@ -48,4 +49,5 @@ php artisan key:generate --show
 ## Notes
 - Free = sleep après ~15 min d'inactivité
 - Postgres Free expire après 30 jours
-- Vidéos R2 : à brancher plus tard (`FILESYSTEM` / disque dédié)
+- Médias (logo, miniatures, vidéos) : **Cloudflare R2** — [R2_SETUP.md](./R2_SETUP.md)
+

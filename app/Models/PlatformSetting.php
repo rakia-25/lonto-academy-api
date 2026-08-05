@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Media;
 use Illuminate\Database\Eloquent\Model;
 
 class PlatformSetting extends Model
@@ -75,16 +76,14 @@ class PlatformSetting extends Model
         return $value;
     }
 
-    /** Chemin absolu d'un fichier logo stocké sous storage/app/public, ou null. */
+    /** Chemin absolu d'un fichier logo (local ou copie temp depuis R2), ou null. */
     public static function logoAbsolutePath(?string $relativePath): ?string
     {
         if (! $relativePath) {
             return null;
         }
 
-        $full = storage_path('app/public/'.$relativePath);
-
-        return is_file($full) ? $full : null;
+        return Media::localPath($relativePath);
     }
 
     /** Chemin absolu du logo certificat pour DomPDF (ou logo site en secours). */

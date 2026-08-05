@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exercise;
 use App\Models\ExerciseSubmission;
 use App\Support\CourseProgress;
+use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -102,7 +103,7 @@ class ExerciseSubmissionController extends Controller
     {
         $submission = $this->findOwnedSubmission($request, $exercise);
 
-        return Storage::disk('public')->download(
+        return Media::download(
             $submission->file_path,
             $this->displayName($submission)
         );
@@ -111,13 +112,13 @@ class ExerciseSubmissionController extends Controller
     public function preview(Request $request, Exercise $exercise)
     {
         $submission = $this->findOwnedSubmission($request, $exercise);
-        $absolute = Storage::disk('public')->path($submission->file_path);
         $mime = Storage::disk('public')->mimeType($submission->file_path) ?: 'application/octet-stream';
 
-        return response()->file($absolute, [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="'.$this->displayName($submission).'"',
-        ]);
+        return Media::inline(
+            $submission->file_path,
+            $this->displayName($submission),
+            $mime
+        );
     }
 
     public function destroy(Request $request, Exercise $exercise)
