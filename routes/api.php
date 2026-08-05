@@ -92,6 +92,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/lessons/{lesson}',                           [AdminCourseController::class, 'updateLesson']);
     Route::delete('/lessons/{lesson}',                        [AdminCourseController::class, 'destroyLesson']);
     Route::post('/lessons/{lesson}/resources',                [AdminCourseController::class, 'addLessonResource']);
+    Route::delete('/lesson-resources/{resource}',             [AdminCourseController::class, 'destroyLessonResource']);
     Route::post('/chapters/{chapter}/exercises',              [AdminCourseController::class, 'storeExercise']);
     Route::put('/exercises/{exercise}',                       [AdminCourseController::class, 'updateExercise']);
     Route::post('/exercises/{exercise}',                      [AdminCourseController::class, 'updateExercise']); // multipart

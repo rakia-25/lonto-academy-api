@@ -241,9 +241,31 @@ class CourseController extends Controller
     // Télécharger un support avec son nom d'origine
     public function downloadLessonResource(LessonResource $resource)
     {
-        abort_unless(Storage::disk('public')->exists($resource->file_path), 404);
+        if (! Storage::disk('public')->exists($resource->file_path)) {
+            abort(404, 'Fichier introuvable. Ré-uploadez ce support dans le cours.');
+        }
+
+        // Sur R2 : redirection vers l'URL publique (plus fiable via Render)
+        if (Media::usingCloud()) {
+            $base = rtrim((string) config('filesystems.disks.public.url'), '/');
+            if ($base !== '') {
+                return redirect()->away($base.'/'.ltrim($resource->file_path, '/'));
+            }
+        }
 
         return Media::download($resource->file_path, $resource->title);
+    }
+
+    // Supprimer un support de leçon (+ fichier R2/local)
+    public function destroyLessonResource(LessonResource $resource)
+    {
+        if ($resource->file_path) {
+            Storage::disk('public')->delete($resource->file_path);
+        }
+
+        $resource->delete();
+
+        return response()->json(['message' => 'Support supprimé.']);
     }
 
     // Modifier un chapitre
@@ -290,6 +312,13 @@ class CourseController extends Controller
     // Supprimer une leçon
     public function destroyLesson(Lesson $lesson)
     {
+        $lesson->load('resources');
+        foreach ($lesson->resources as $resource) {
+            if ($resource->file_path) {
+                Storage::disk('public')->delete($resource->file_path);
+            }
+        }
+
         $lesson->delete();
 
         return response()->json(['message' => 'Leçon supprimée.']);
