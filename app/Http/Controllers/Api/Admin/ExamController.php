@@ -153,17 +153,30 @@ class ExamController extends Controller
             if ($q['type'] !== 'mcq') {
                 continue;
             }
-            $options = array_values(array_filter($q['options'] ?? [], fn ($o) => trim((string) $o) !== ''));
+
+            $options = [];
+            foreach ($q['options'] ?? [] as $option) {
+                $trimmed = trim((string) $option);
+                if ($trimmed !== '') {
+                    $options[] = $trimmed;
+                }
+            }
+
             if (count($options) < 2) {
                 return response()->json([
                     'message' => 'Question '.($i + 1).' (QCM) : au moins 2 options sont requises.',
                 ], 422);
             }
-            if (empty($q['correct_answer']) || ! in_array($q['correct_answer'], $options, true)) {
+
+            $correct = trim((string) ($q['correct_answer'] ?? ''));
+            if ($correct === '' || ! in_array($correct, $options, true)) {
                 return response()->json([
                     'message' => 'Question '.($i + 1).' (QCM) : la bonne réponse doit faire partie des options.',
                 ], 422);
             }
+
+            $validated['questions'][$i]['options'] = $options;
+            $validated['questions'][$i]['correct_answer'] = $correct;
         }
 
         $exam->questions()->delete();
@@ -174,9 +187,7 @@ class ExamController extends Controller
                 'exam_id'        => $exam->id,
                 'type'           => $q['type'],
                 'question'       => $q['question'],
-                'options'        => $isMcq
-                    ? array_values(array_filter($q['options'] ?? [], fn ($o) => trim((string) $o) !== ''))
-                    : null,
+                'options'        => $isMcq ? ($q['options'] ?? []) : null,
                 'correct_answer' => $isMcq ? $q['correct_answer'] : null,
                 'points'         => $q['points'] ?? 1,
                 'order'          => $i,
@@ -367,7 +378,10 @@ class ExamController extends Controller
             abort(404, 'Fichier introuvable.');
         }
 
-        return Storage::disk('public')->download($path, basename($path));
+        return response()->download(
+            Storage::disk('public')->path($path),
+            basename($path)
+        );
     }
 
     // Résultats des apprenants

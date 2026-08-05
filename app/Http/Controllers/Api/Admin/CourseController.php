@@ -242,7 +242,10 @@ class CourseController extends Controller
     {
         abort_unless(Storage::disk('public')->exists($resource->file_path), 404);
 
-        return Storage::disk('public')->download($resource->file_path, $resource->title);
+        return response()->download(
+            Storage::disk('public')->path($resource->file_path),
+            $resource->title
+        );
     }
 
     // Modifier un chapitre
@@ -363,8 +366,8 @@ class CourseController extends Controller
         abort_unless($exercise->instructions_file, 404);
         abort_unless(Storage::disk('public')->exists($exercise->instructions_file), 404);
 
-        return Storage::disk('public')->download(
-            $exercise->instructions_file,
+        return response()->download(
+            Storage::disk('public')->path($exercise->instructions_file),
             basename($exercise->instructions_file)
         );
     }
@@ -383,11 +386,23 @@ class CourseController extends Controller
         ]);
 
         foreach ($validated['questions'] as $index => $question) {
-            if (! in_array($question['correct_answer'], $question['options'], true)) {
+            $options = [];
+            foreach ($question['options'] as $option) {
+                $trimmed = trim((string) $option);
+                if ($trimmed !== '') {
+                    $options[] = $trimmed;
+                }
+            }
+
+            $correct = trim((string) $question['correct_answer']);
+            if ($correct === '' || ! in_array($correct, $options, true)) {
                 throw ValidationException::withMessages([
                     "questions.$index.correct_answer" => 'La bonne réponse doit faire partie des options.',
                 ]);
             }
+
+            $validated['questions'][$index]['options'] = $options;
+            $validated['questions'][$index]['correct_answer'] = $correct;
         }
 
         $quiz = $chapter->quiz;
