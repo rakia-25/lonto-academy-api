@@ -9,6 +9,7 @@ use App\Models\Exercise;
 use App\Models\Lesson;
 use App\Models\LessonResource;
 use App\Models\Quiz;
+use App\Support\Audit;
 use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -62,6 +63,13 @@ class CourseController extends Controller
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(4);
 
         $course = Course::create($validated);
+
+        Audit::log(
+            'course.create',
+            "Création du cours « {$course->title} »",
+            $course,
+            ['category' => $course->category, 'level' => $course->level]
+        );
 
         return response()->json($course, 201);
     }
@@ -118,17 +126,34 @@ class CourseController extends Controller
 
         $course->update($validated);
 
+        Audit::log(
+            'course.update',
+            "Modification du cours « {$course->title} »",
+            $course
+        );
+
         return response()->json($course);
     }
 
     // Supprimer un cours
     public function destroy(Course $course)
     {
+        $title = $course->title;
+        $id = $course->id;
+
         if ($course->thumbnail) {
             Storage::disk('public')->delete($course->thumbnail);
         }
 
         $course->delete();
+
+        Audit::log(
+            'course.delete',
+            "Suppression du cours « {$title} »",
+            null,
+            ['course_id' => $id, 'title' => $title]
+        );
+
         return response()->json(['message' => 'Cours supprimé.']);
     }
 
@@ -161,6 +186,12 @@ class CourseController extends Controller
                 'Nouveau cours disponible : « '.$course->title.' ». Découvrez-le dans le catalogue.'
             );
         }
+
+        Audit::log(
+            $course->is_published ? 'course.publish' : 'course.unpublish',
+            ($course->is_published ? 'Publication' : 'Dépublication')." du cours « {$course->title} »",
+            $course
+        );
 
         return response()->json($course);
     }

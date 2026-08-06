@@ -15,18 +15,22 @@ use App\Http\Controllers\Api\Admin\ExamController as AdminExamController;
 use App\Http\Controllers\Api\Admin\ExerciseSubmissionController as AdminExerciseSubmissionController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\StatsController;
+use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\Admin\CertificateController as AdminCertificateController;
 use App\Http\Controllers\Api\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Api\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LessonProgressController;
 use App\Http\Controllers\Api\PlatformSettingController;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'fresh'])->group(function () {
     Route::get('/me',              [AuthController::class, 'me']);
     Route::put('/me',              [AuthController::class, 'updateProfile']);
     Route::post('/me/avatar',      [AuthController::class, 'uploadAvatar']);
     Route::delete('/me/avatar',    [AuthController::class, 'deleteAvatar']);
     Route::put('/me/password',     [AuthController::class, 'updatePassword']);
     Route::post('/logout',         [AuthController::class, 'logout']);
+    Route::post('/session/heartbeat', [AuthController::class, 'heartbeat']);
     Route::get('/my-learning',     [CourseController::class, 'myLearning']);
     Route::get('/dashboard',       [DashboardController::class, 'index']);
 
@@ -68,9 +72,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/certificates/{code}/download',   [CertificateController::class, 'download']);
 });
 
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'fresh', 'admin'])->prefix('admin')->group(function () {
     // Stats
     Route::get('/stats', [StatsController::class, 'index']);
+
+    // Rapports (graphiques circulaires filtrables)
+    Route::get('/reports', [AdminReportController::class, 'index']);
+
+    // Certificats délivrés + stats examens
+    Route::get('/certificates', [AdminCertificateController::class, 'index']);
+    Route::get('/certificates/stats', [AdminCertificateController::class, 'stats']);
+    Route::get('/certificates/{code}/download', [AdminCertificateController::class, 'download']);
+
+    // Journal d'activité
+    Route::get('/activity-logs', [AdminActivityLogController::class, 'index']);
 
     // Paiements (lecture / export — sans gateway)
     Route::get('/payments',        [AdminPaymentController::class, 'index']);
@@ -100,10 +115,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/chapters/{chapter}/quiz',                   [AdminCourseController::class, 'storeQuiz']);
     Route::delete('/quizzes/{quiz}',                          [AdminCourseController::class, 'destroyQuiz']);
 
-    // Utilisateurs
-    Route::get('/users',                      [AdminUserController::class, 'index']);
-    Route::get('/users/{user}',               [AdminUserController::class, 'show']);
-    Route::patch('/users/{user}/toggle-block',[AdminUserController::class, 'toggleBlock']);
+    // Utilisateurs / apprenants
+    Route::get('/users',                        [AdminUserController::class, 'index']);
+    Route::get('/users/{user}',                 [AdminUserController::class, 'show']);
+    Route::put('/users/{user}',                 [AdminUserController::class, 'update']);
+    Route::patch('/users/{user}/toggle-block',  [AdminUserController::class, 'toggleBlock']);
+    Route::post('/users/{user}/force-logout',   [AdminUserController::class, 'forceLogout']);
+    Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword']);
 
     // Examens
     Route::get('/courses/{course}/exam',              [AdminExamController::class, 'show']);

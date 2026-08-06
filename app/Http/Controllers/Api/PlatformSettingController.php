@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Support\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -62,6 +63,13 @@ class PlatformSettingController extends Controller
         $row->update([
             'data' => array_merge($row->data ?? [], $validated),
         ]);
+
+        Audit::log(
+            'settings.update',
+            'Mise à jour des paramètres de la plateforme',
+            $row,
+            ['changed_keys' => array_keys($validated)]
+        );
 
         return response()->json([
             'message'  => 'Paramètres enregistrés.',

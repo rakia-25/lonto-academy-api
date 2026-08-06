@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\PlatformSetting;
+use App\Support\Audit;
 use App\Support\Notify;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,19 @@ class EnrollmentController extends Controller
                 "Nouvelle inscription : {$user->name} ({$user->email}) → « {$course->title} »."
             );
         }
+
+        Audit::log(
+            'enrollment.checkout',
+            "Inscription de {$user->name} au cours « {$course->title} »".($isFree ? ' (gratuit)' : ''),
+            $enrollment['enrollment'],
+            [
+                'course_id' => $course->id,
+                'free'      => $isFree,
+                'method'    => $validated['method'] ?? null,
+                'amount'    => $isFree ? 0 : $price,
+            ],
+            $user
+        );
 
         return response()->json([
             'message'    => $isFree ? 'Inscription réussie.' : 'Paiement confirmé. Accès au cours débloqué.',

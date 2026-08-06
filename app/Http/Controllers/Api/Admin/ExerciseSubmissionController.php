@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\ExerciseSubmission;
+use App\Support\Audit;
 use App\Support\CourseProgress;
 use App\Support\Media;
 use App\Support\Notify;
@@ -115,9 +116,10 @@ class ExerciseSubmissionController extends Controller
             'corrector:id,name',
         ]);
 
+        $exerciseTitle = $submission->exercise?->title ?? 'Exercice';
+        $courseTitle = $submission->exercise?->chapter?->course?->title ?? 'le cours';
+
         if ($newStatus !== 'pending') {
-            $exerciseTitle = $submission->exercise?->title ?? 'Exercice';
-            $courseTitle = $submission->exercise?->chapter?->course?->title ?? 'le cours';
             $label = $newStatus === 'validated' ? 'validé' : 'à retravailler';
             $scorePart = isset($data['score']) ? " (note : {$data['score']}/100)" : '';
             Notify::send(
@@ -130,6 +132,18 @@ class ExerciseSubmissionController extends Controller
         if ($newStatus === 'validated' && $submission->user && $submission->exercise?->chapter?->course) {
             CourseProgress::maybeIssueCertificate($submission->user, $submission->exercise->chapter->course);
         }
+
+        $learnerName = $submission->user?->name ?? 'apprenant';
+        Audit::log(
+            'exercise.correct',
+            "Correction de l'exercice « {$exerciseTitle} » pour {$learnerName} — {$newStatus}",
+            $submission,
+            [
+                'status' => $newStatus,
+                'score'  => $data['score'] ?? null,
+                'user_id'=> $submission->user_id,
+            ]
+        );
 
         return response()->json([
             'message'    => 'Correction enregistrée.',

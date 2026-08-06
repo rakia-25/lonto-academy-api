@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LessonProgress;
 use App\Models\Lesson;
 use App\Models\ExerciseSubmission;
+use App\Support\Audit;
 use App\Support\CourseProgress;
 use Illuminate\Http\Request;
 
@@ -68,6 +69,21 @@ class LessonProgressController extends Controller
 
         $stats = CourseProgress::stats($user, $course);
         $certificate = CourseProgress::maybeIssueCertificate($user, $course);
+
+        if ($request->exists('completed')) {
+            $done = $request->boolean('completed');
+            Audit::log(
+                $done ? 'lesson.complete' : 'lesson.uncomplete',
+                ($done ? 'Leçon terminée' : 'Leçon marquée non terminée')." : « {$lesson->title} » ({$course->title})",
+                $progress,
+                [
+                    'lesson_id' => $lesson->id,
+                    'course_id' => $course->id,
+                    'completed' => $done,
+                ],
+                $user
+            );
+        }
 
         if ($request->exists('completed') && $request->boolean('completed')) {
             $chapter = $lesson->chapter;

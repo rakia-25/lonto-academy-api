@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Exercise;
 use App\Models\ExerciseSubmission;
+use App\Support\Audit;
 use App\Support\CourseProgress;
 use App\Support\Media;
 use Illuminate\Http\Request;
@@ -69,6 +70,18 @@ class ExerciseSubmissionController extends Controller
         // Expose le nom d'origine côté API (non persisté) pour l'affichage
         $submission->setAttribute('original_name', $originalName);
         $submission->setAttribute('display_name', $readableName);
+
+        Audit::log(
+            'exercise.submit',
+            "Soumission de l'exercice « {$exercise->title} » ({$course->title})",
+            $submission,
+            [
+                'exercise_id' => $exercise->id,
+                'course_id'   => $course->id,
+                'file'        => $readableName,
+            ],
+            $user
+        );
 
         $stats = CourseProgress::stats($user, $course);
         $certificate = CourseProgress::maybeIssueCertificate($user, $course);
@@ -143,7 +156,22 @@ class ExerciseSubmissionController extends Controller
             Storage::disk('public')->delete($submission->file_path);
         }
 
+        $exerciseTitle = $exercise->title;
+        $courseTitle = $course->title;
+        $submissionId = $submission->id;
         $submission->delete();
+
+        Audit::log(
+            'exercise.delete_submission',
+            "Suppression de la soumission « {$exerciseTitle} » ({$courseTitle})",
+            null,
+            [
+                'exercise_id'   => $exercise->id,
+                'course_id'     => $course->id,
+                'submission_id' => $submissionId,
+            ],
+            $user
+        );
 
         $stats = CourseProgress::stats($user, $course);
 

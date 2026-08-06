@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Support\Audit;
 use App\Support\CourseProgress;
 use Illuminate\Http\Request;
 
@@ -82,6 +83,19 @@ class QuizAttemptController extends Controller
             'score'   => $score,
             'passed'  => $passed,
         ]);
+
+        Audit::log(
+            'quiz.attempt',
+            "Quiz « {$quiz->title} » — score {$score}%".($passed ? ' (réussi)' : ''),
+            $attempt,
+            [
+                'quiz_id'   => $quiz->id,
+                'course_id' => $course->id,
+                'score'     => $score,
+                'passed'    => $passed,
+            ],
+            $user
+        );
 
         $stats = CourseProgress::stats($user, $course);
         $certificate = $passed ? CourseProgress::maybeIssueCertificate($user, $course) : null;

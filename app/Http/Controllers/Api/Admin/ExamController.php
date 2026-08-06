@@ -10,6 +10,7 @@ use App\Models\ExamAttempt;
 use App\Models\ExamQuestion;
 use App\Support\CertificateDesign;
 use App\Support\CertificatePdf;
+use App\Support\Audit;
 use App\Support\Media;
 use App\Support\Notify;
 use Illuminate\Http\Request;
@@ -49,6 +50,13 @@ class ExamController extends Controller
             $data
         );
 
+        Audit::log(
+            'exam.save',
+            "Enregistrement de l'examen « {$exam->title} » (cours : {$course->title})",
+            $exam,
+            ['course_id' => $course->id]
+        );
+
         return response()->json([
             'message' => 'Examen enregistré.',
             'exam'    => $exam->load('questions'),
@@ -60,6 +68,12 @@ class ExamController extends Controller
         $data = $this->validateExam($request);
         $data = $this->normalizeCertificateFields($data);
         $exam->update($data);
+
+        Audit::log(
+            'exam.update',
+            "Modification de l'examen « {$exam->title} »",
+            $exam
+        );
 
         return response()->json([
             'message' => 'Examen mis à jour.',
@@ -117,7 +131,17 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam)
     {
+        $title = $exam->title;
+        $id = $exam->id;
         $exam->delete();
+
+        Audit::log(
+            'exam.delete',
+            "Suppression de l'examen « {$title} »",
+            null,
+            ['exam_id' => $id, 'title' => $title]
+        );
+
         return response()->json(['message' => 'Examen supprimé.']);
     }
 
@@ -130,6 +154,12 @@ class ExamController extends Controller
         }
 
         $exam->update(['is_published' => ! $exam->is_published]);
+
+        Audit::log(
+            $exam->is_published ? 'exam.publish' : 'exam.unpublish',
+            ($exam->is_published ? 'Publication' : 'Dépublication')." de l'examen « {$exam->title} »",
+            $exam
+        );
 
         return response()->json([
             'message' => $exam->is_published ? 'Examen publié.' : 'Examen dépublié.',
@@ -359,6 +389,17 @@ class ExamController extends Controller
                 "Votre examen « {$examTitle} » a été corrigé : {$score}% (minimum requis : {$passScore}%). Vous pouvez retenter si des tentatives restent disponibles."
             );
         }
+
+        Audit::log(
+            'exam.grade',
+            "Correction de l'examen « {$examTitle} » — score {$score}%".($passed ? ' (réussi)' : ''),
+            $attempt,
+            [
+                'score'  => $score,
+                'passed' => $passed,
+                'user_id'=> $attempt->user_id,
+            ]
+        );
 
         return response()->json([
             'message'     => 'Correction enregistrée.',

@@ -7,6 +7,7 @@ use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Support\Audit;
 use App\Support\CertificateDesign;
 use App\Support\CourseProgress;
 use App\Support\Notify;
@@ -186,6 +187,14 @@ class ExamController extends Controller
             'status'         => 'in_progress',
         ]);
 
+        Audit::log(
+            'exam.start',
+            "Début d'examen « {$exam->title} » ({$course->title})",
+            $attempt,
+            ['exam_id' => $exam->id, 'course_id' => $course->id],
+            $user
+        );
+
         return response()->json([
             'message' => 'Examen démarré. Bonne chance !',
             'attempt' => $this->presentAttempt($attempt),
@@ -342,6 +351,22 @@ class ExamController extends Controller
         }
 
         $result = $this->finalizeAttempt($attempt->fresh(), $withinTime ? 'submitted' : 'expired');
+
+        $exam = $attempt->exam;
+        $exam?->loadMissing('course');
+        Audit::log(
+            'exam.submit',
+            "Soumission d'examen « ".($exam?->title ?? 'Examen').' »'.
+                ($withinTime ? '' : ' (temps écoulé)'),
+            $attempt->fresh(),
+            [
+                'exam_id' => $attempt->exam_id,
+                'status'  => $withinTime ? 'submitted' : 'expired',
+                'score'   => $result['score'] ?? null,
+                'passed'  => $result['passed'] ?? null,
+            ],
+            $user
+        );
 
         return response()->json($result);
     }

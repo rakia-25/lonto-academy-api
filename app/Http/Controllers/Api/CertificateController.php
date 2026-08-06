@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Exam;
+use App\Support\Audit;
 use App\Support\CertificateDesign;
 use App\Support\CertificatePdf;
 use Illuminate\Http\Request;
@@ -65,6 +66,13 @@ class CertificateController extends Controller
             $certificate->user,
             $certificate->course,
             $design
+        );
+
+        Audit::log(
+            'certificate.download',
+            "Téléchargement du certificat « {$certificate->course->title} »",
+            $certificate,
+            ['code' => $certificate->verification_code]
         );
 
         $filename = ($type === 'attestation' ? 'attestation-' : 'certificat-')

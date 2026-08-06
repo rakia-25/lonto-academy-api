@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseReview;
+use App\Support\Audit;
 use Illuminate\Http\Request;
 
 class CourseReviewController extends Controller
@@ -68,6 +69,14 @@ class CourseReviewController extends Controller
         );
 
         CourseReview::refreshCourseStats($course);
+
+        Audit::log(
+            'review.create',
+            "Avis {$data['rating']}/5 sur « {$course->title} »",
+            $review,
+            ['rating' => $data['rating'], 'course_id' => $course->id],
+            $user
+        );
 
         return response()->json([
             'message' => 'Avis enregistré.',

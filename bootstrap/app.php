@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'active' => \App\Http\Middleware\EnsureAccountActive::class,
+            'fresh' => \App\Http\Middleware\EnsureSessionFresh::class,
         ]);
         $middleware->api(append: [
             \App\Http\Middleware\CheckMaintenanceMode::class,
