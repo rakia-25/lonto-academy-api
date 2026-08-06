@@ -29,7 +29,7 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token): void
     {
         $frontend = rtrim((string) config('app.frontend_url', config('app.url')), '/');
-        $url = $frontend.'/reset-password?token='.urlencode($token).'&email='.urlencode($this->email);
+        $url = $frontend.'/reinitialiser-mot-de-passe?token='.urlencode($token).'&email='.urlencode($this->email);
 
         $this->notify(new ResetPasswordNotification($url));
     }

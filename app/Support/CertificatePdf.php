@@ -17,7 +17,7 @@ class CertificatePdf
     public static function make(Certificate $certificate, $learner, $course, array $design): array
     {
         $canImages = extension_loaded('gd');
-        $verifyUrl = rtrim((string) config('app.frontend_url'), '/').'/verify/'.$certificate->verification_code;
+        $verifyUrl = rtrim((string) config('app.frontend_url'), '/').'/verifier/'.$certificate->verification_code;
 
         // DomPDF casse souvent sur les chemins Windows avec espaces :
         // on embarque le logo en data-URI base64.

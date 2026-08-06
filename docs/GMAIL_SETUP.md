@@ -34,7 +34,7 @@ php artisan config:clear
 
 ## 3. Test
 
-1. Page `/forgot-password` → saisissez un e-mail existant.
+1. Page `/mot-de-passe-oublie` → saisissez un e-mail existant.
 2. Vérifiez la boîte Gmail (et les spams).
 3. Ou consultez `storage/logs/laravel.log` si `MAIL_MAILER=log`.
 
